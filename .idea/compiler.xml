@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="com.gradle.cricstat.cricstat-project.main" target="1.8" />
+      <module name="com.gradle.cricstat.cricstat-project.test" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
