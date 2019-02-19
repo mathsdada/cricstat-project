@@ -1,4 +1,4 @@
-package rest;
+package rest.Response;
 
 import java.math.BigDecimal;
 
@@ -6,7 +6,7 @@ public class PlayerBattingStatsResponse {
     private final String name;
     private final int runs;
     private final BigDecimal strikeRate;
-    private final boolean isNotOut;
+    private final int numOuts;
     private final int fours;
     private final int sixes;
     private final String format;
@@ -15,13 +15,13 @@ public class PlayerBattingStatsResponse {
     private final String teamPlayedFor;
     private final String teamPlayedAgainst;
 
-    public PlayerBattingStatsResponse(String name, int runs, BigDecimal strikeRate, boolean isNotOut,
+    public PlayerBattingStatsResponse(String name, int runs, BigDecimal strikeRate, int numOuts,
                                       int fours, int sixes, String format, String venue, Long date,
                                       String teamPlayedFor, String teamPlayedAgainst) {
         this.name = name;
         this.runs = runs;
         this.strikeRate = strikeRate;
-        this.isNotOut = isNotOut;
+        this.numOuts = numOuts;
         this.fours = fours;
         this.sixes = sixes;
         this.format = format;
@@ -41,10 +41,6 @@ public class PlayerBattingStatsResponse {
 
     public BigDecimal getStrikeRate() {
         return strikeRate;
-    }
-
-    public boolean isNotOut() {
-        return isNotOut;
     }
 
     public int getFours() {
@@ -73,6 +69,10 @@ public class PlayerBattingStatsResponse {
 
     public String getTeamPlayedAgainst() {
         return teamPlayedAgainst;
+    }
+
+    public int getNumOuts() {
+        return numOuts;
     }
 }
 

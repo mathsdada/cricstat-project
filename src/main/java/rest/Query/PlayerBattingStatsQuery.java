@@ -1,7 +1,7 @@
 package rest.Query;
 
 import Database.DatabaseEngine;
-import rest.PlayerBattingStatsResponse;
+import rest.Response.PlayerBattingStatsResponse;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,7 +28,7 @@ public class PlayerBattingStatsQuery {
         if (venue != null) sqlQuery += " and match.venue = ? ";
         if (teamPlayedFor != null) sqlQuery += " and player_batting_score.team_played_for = ? ";
         if (teamPlayedAgainst != null) sqlQuery += " and player_batting_score.team_played_against = ? ";
-        sqlQuery += " order by match.date desc limit ? ";
+        sqlQuery += " order by match.date desc, player_batting_score.innings_num desc limit ? ";
 
         try {
             int parameterIndex = 0;
@@ -45,17 +45,12 @@ public class PlayerBattingStatsQuery {
             {
                 ResultSet resultSet = preparedStatement.executeQuery();
                 while (resultSet.next()) {
-                    boolean isNotOut = false;
-                    if (resultSet.getString("status").equals("not out")) isNotOut = true;
-                    String queriedCategoryId = null, queriedCategoryVal = null;
-                    if (teamPlayedAgainst != null) {
-                        queriedCategoryId = "team";
-                        queriedCategoryVal = teamPlayedAgainst;
-                    }
+                    int isOut = 1;
+                    if (resultSet.getString("status").equals("not out")) isOut = 0;
                     response.add(new PlayerBattingStatsResponse(
                             resultSet.getString("name"),
                             resultSet.getInt("runs_scored"),
-                            resultSet.getBigDecimal("strike_rate"), isNotOut,
+                            resultSet.getBigDecimal("strike_rate"), isOut,
                             resultSet.getInt("num_fours"), resultSet.getInt("num_sixes"),
                             resultSet.getString("format"),
                             resultSet.getString("venue"),
@@ -79,16 +74,14 @@ public class PlayerBattingStatsQuery {
             ArrayList<PlayerBattingStatsResponse> response = new ArrayList<>();
             String sqlQuery =
                     " select batsman.name as name," +
-                            " batsman_to_bowler.num_runs as runs_scored, " +
-                            " batsman_to_bowler.num_balls, " +
-                            " not(batsman_to_bowler.num_wickets::boolean) as is_not_out," +
-                            " batsman_to_bowler.num_fours, " +
-                            " batsman_to_bowler.num_sixes, " +
+                            " SUM(batsman_to_bowler.num_runs) as runs_scored, " +
+                            " SUM(batsman_to_bowler.num_balls) as num_balls, " +
+                            " SUM(batsman_to_bowler.num_wickets) as num_outs, " +
+                            " SUM(batsman_to_bowler.num_fours) as num_fours, " +
+                            " SUM(batsman_to_bowler.num_sixes) as num_sixes, " +
                             " match.format, match.venue, match.date, " +
                             " batsman_to_bowler.batsman_team as team_played_for, " +
-                            " batsman_to_bowler.bowler_team as team_played_against, " +
-                            " bowler.name as against_bowler, bowler.bowling_style as against_bowling_style, " +
-                            " match.title from batsman_to_bowler" +
+                            " batsman_to_bowler.bowler_team as team_played_against from batsman_to_bowler" +
                     " join player as batsman on batsman.id = batsman_to_bowler.batsman_id " +
                             " join player as bowler on bowler.id = batsman_to_bowler.bowler_id " +
                             " join match on match.id = batsman_to_bowler.match_id " +
@@ -99,7 +92,8 @@ public class PlayerBattingStatsQuery {
             if (teamPlayedAgainst != null) sqlQuery += " and batsman_to_bowler.bowler_team = ? ";
             if (againstBowler != null) sqlQuery += " and bowler.name = ? ";
             if (againstBowlingStyle != null) sqlQuery += " and bowler.bowling_style = ? ";
-            sqlQuery += " order by match.date desc, batsman_to_bowler.innings_num desc limit ? ";
+            sqlQuery += " group by batsman_to_bowler.innings_num, date, format, venue, batsman.name, team_played_for, team_played_against " +
+                        " order by match.date desc, batsman_to_bowler.innings_num desc limit ? ";
 
             try {
                 int parameterIndex = 0;
@@ -124,7 +118,7 @@ public class PlayerBattingStatsQuery {
                                 resultSet.getString("name"),
                                 resultSet.getInt("runs_scored"),
                                 strikeRate.setScale(2, RoundingMode.FLOOR),
-                                resultSet.getBoolean("is_not_out"),
+                                resultSet.getInt("num_outs"),
                                 resultSet.getInt("num_fours"), resultSet.getInt("num_sixes"),
                                 resultSet.getString("format"),
                                 resultSet.getString("venue"),
