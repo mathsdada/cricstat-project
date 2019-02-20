@@ -8,6 +8,7 @@ import rest.Query.PlayerBowlingStatsQuery;
 import rest.Query.TeamStatsQuery;
 import rest.Response.PlayerBattingStatsResponse;
 import rest.Response.PlayerBowlingStatsResponse;
+import rest.Response.TeamStatsBattingCommonResponse;
 import rest.Response.TeamStatsRecentMatchesResponse;
 
 import java.util.ArrayList;
@@ -59,7 +60,29 @@ public class RestApiController {
             @RequestParam(value = "format", required = false) String format,
             @RequestParam(value = "venue", required = false) String venue,
             @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "againstTeam", required = false) String againstTeam) {
+            @RequestParam(value = "against_team", required = false) String againstTeam) {
         return TeamStatsQuery.getTeamStatsRecentMatches(teamName, format, venue, numMatches, againstTeam);
+    }
+
+    @RequestMapping("/team_stats/batting/most_runs")
+    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostRuns(
+            @RequestParam(value = "name", required = true) String teamName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "venue", required = false) String venue,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
+            @RequestParam(value = "against_team", required = false) String againstTeam
+    ) {
+        return TeamStatsQuery.getTeamStatsBattingMostRuns(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_RUNS);
+    }
+
+    @RequestMapping("/team_stats/batting/most_fours")
+    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostFours(
+            @RequestParam(value = "name", required = true) String teamName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "venue", required = false) String venue,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
+            @RequestParam(value = "against_team", required = false) String againstTeam
+    ) {
+        return TeamStatsQuery.getTeamStatsBattingMostRuns(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_FOURS);
     }
 }
