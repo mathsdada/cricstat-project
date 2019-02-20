@@ -15,7 +15,6 @@ import java.util.ArrayList;
 public class TeamStatsQuery {
     public enum CommonBattingStats {
         MOST_RUNS,
-        BEST_SR,
         MOST_FIFTIES,
         MOST_HUNDREDS,
         MOST_FOURS,
@@ -90,9 +89,9 @@ public class TeamStatsQuery {
         }
         return response;
     }
-    public static ArrayList<TeamStatsBattingCommonResponse> getTeamStatsBattingMostRuns(String teamName, String format,
-                                                                                        String venue, int numMatches,
-                                                                                        String againstTeam, CommonBattingStats statsType) {
+    public static ArrayList<TeamStatsBattingCommonResponse> getTeamStatsBattingCommonStats(String teamName, String format,
+                                                                                           String venue, int numMatches,
+                                                                                           String againstTeam, CommonBattingStats statsType) {
         ArrayList<TeamStatsBattingCommonResponse> response = new ArrayList<>();
         if (againstTeam != null && againstTeam.equals(teamName)) {
             /* Do not proceed further the request if againstTeam is same as teamName */
