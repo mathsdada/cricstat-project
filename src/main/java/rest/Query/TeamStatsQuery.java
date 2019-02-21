@@ -79,10 +79,12 @@ public class TeamStatsQuery {
                             if (match != null) {
                                 response.add(match);
                             }
+                            String winningTeam = resultSet.getString("winning_team");
+                            String status = resultSet.getString("status");
+                            if (winningTeam != null && !teamName.equals(winningTeam)) status = "l";
                             match = new TeamStatsRecentMatchesResponse(teamName, new ArrayList<>(),
                                     resultSet.getString("outcome"),
-                                    resultSet.getString("status"),
-                                    resultSet.getString("winning_team"),
+                                    status, winningTeam,
                                     resultSet.getString("format"),
                                     resultSet.getString("venue"),
                                     resultSet.getLong("date"));
