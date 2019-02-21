@@ -11,6 +11,7 @@ import rest.Response.PlayerBowlingStatsResponse;
 import rest.Response.TeamStatsBattingCommonResponse;
 import rest.Response.TeamStatsRecentMatchesResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 
 @RestController
@@ -64,91 +65,43 @@ public class RestApiController {
         return TeamStatsQuery.getTeamStatsRecentMatches(teamName, format, venue, numMatches, againstTeam);
     }
 
-    @RequestMapping("/team_stats/batting/most_runs")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostRuns(
+    @RequestMapping({
+            "/team_stats/batting/most_runs",
+            "/team_stats/batting/most_fours",
+            "/team_stats/batting/most_sixes",
+            "/team_stats/batting/most_fifties",
+            "/team_stats/batting/most_hundreds",
+            "/team_stats/batting/most_ducks",
+            "/team_stats/batting/highest_strike_rate",
+            "/team_stats/batting/highest_average"})
+    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingCommon(
+            HttpServletRequest request,
             @RequestParam(value = "name", required = true) String teamName,
             @RequestParam(value = "format", required = false) String format,
             @RequestParam(value = "venue", required = false) String venue,
             @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
             @RequestParam(value = "against_team", required = false) String againstTeam
     ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_RUNS);
-    }
-
-    @RequestMapping("/team_stats/batting/most_fours")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostFours(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_FOURS);
-    }
-
-    @RequestMapping("/team_stats/batting/most_sixes")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostSixes(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_SIXES);
-    }
-
-    @RequestMapping("/team_stats/batting/most_fifties")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostFifties(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_FIFTIES);
-    }
-
-    @RequestMapping("/team_stats/batting/most_hundreds")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostHundreds(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_HUNDREDS);
-    }
-
-    @RequestMapping("/team_stats/batting/most_ducks")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingMostDucks(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_DUCKS);
-    }
-
-    @RequestMapping("/team_stats/batting/highest_strike_rate")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingHighStrikeRate(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.HIGH_STRIKE_RATE);
-    }
-
-    @RequestMapping("/team_stats/batting/highest_average")
-    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingHighAverage(
-            @RequestParam(value = "name", required = true) String teamName,
-            @RequestParam(value = "format", required = false) String format,
-            @RequestParam(value = "venue", required = false) String venue,
-            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
-            @RequestParam(value = "against_team", required = false) String againstTeam
-    ) {
-        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.HIGH_AVERAGE);
+        TeamStatsQuery.CommonBattingStats statsType;
+        switch (request.getRequestURI()) {
+            case "/team_stats/batting/most_runs":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_RUNS; break;
+            case "/team_stats/batting/most_fours":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_FOURS; break;
+            case "/team_stats/batting/most_sixes":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_SIXES; break;
+            case "/team_stats/batting/most_fifties":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_FIFTIES; break;
+            case "/team_stats/batting/most_hundreds":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_HUNDREDS; break;
+            case "/team_stats/batting/most_ducks":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_DUCKS; break;
+            case "/team_stats/batting/highest_strike_rate":
+                statsType = TeamStatsQuery.CommonBattingStats.HIGH_STRIKE_RATE; break;
+            case "/team_stats/batting/highest_average":
+                statsType = TeamStatsQuery.CommonBattingStats.HIGH_AVERAGE; break;
+            default: return new ArrayList<>();
+        }
+        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, statsType);
     }
 }
