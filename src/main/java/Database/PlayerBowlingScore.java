@@ -15,6 +15,7 @@ public class PlayerBowlingScore {
         innings_num integer NOT NULL,
         team_played_for text NOT NULL,
         team_played_against text NOT NULL,
+        TODO maintain balls_bowled instead of overs_bowled so that it will be simple while calculating average/strikerate/economy
         overs_bowled numeric(4, 1) NOT NULL,
         num_maidens integer NOT NULL,
         runs_given integer NOT NULL,

@@ -6,10 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rest.Query.PlayerBowlingStatsQuery;
 import rest.Query.TeamStatsQuery;
-import rest.Response.PlayerBattingStatsResponse;
-import rest.Response.PlayerBowlingStatsResponse;
-import rest.Response.TeamStatsBattingCommonResponse;
-import rest.Response.TeamStatsRecentMatchesResponse;
+import rest.Response.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -103,5 +100,43 @@ public class RestApiController {
             default: return new ArrayList<>();
         }
         return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, statsType);
+    }
+
+
+    @RequestMapping({
+            "/team_stats/bowling/most_wickets",
+            "/team_stats/bowling/most_maidens",
+            "/team_stats/bowling/most_four_plus_wkts",
+            "/team_stats/bowling/most_five_plus_wkts",
+            "/team_stats/bowling/best_average",
+            "/team_stats/bowling/best_strike_rate",
+            "/team_stats/bowling/best_economy"})
+    public ArrayList<TeamStatsBowlingCommonResponse> teamStatsBowlingCommon(
+            HttpServletRequest request,
+            @RequestParam(value = "name", required = true) String teamName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "venue", required = false) String venue,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
+            @RequestParam(value = "against_team", required = false) String againstTeam
+    ) {
+        TeamStatsQuery.CommonBowlingStats statsType;
+        switch (request.getRequestURI()) {
+            case "/team_stats/bowling/most_wickets":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_WICKETS; break;
+            case "/team_stats/bowling/most_maidens":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_MAIDENS; break;
+            case "/team_stats/bowling/most_four_plus_wkts":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_FOUR_PLUS_WKTS; break;
+            case "/team_stats/bowling/most_five_plus_wkts":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_FIVE_PLUS_WKTS; break;
+            case "/team_stats/bowling/best_average":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_AVERAGE; break;
+            case "/team_stats/bowling/best_economy":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_ECONOMY; break;
+            case "/team_stats/bowling/best_strike_rate":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_STRIKE_RATE; break;
+            default: return new ArrayList<>();
+        }
+        return TeamStatsQuery.getTeamStatsBowlingCommonStats(teamName, format, venue, numMatches, againstTeam, statsType);
     }
 }
