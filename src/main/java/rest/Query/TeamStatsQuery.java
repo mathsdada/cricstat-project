@@ -19,7 +19,9 @@ public class TeamStatsQuery {
         MOST_HUNDREDS,
         MOST_FOURS,
         MOST_SIXES,
-        MOST_DUCKS
+        MOST_DUCKS,
+        HIGH_STRIKE_RATE,
+        HIGH_AVERAGE
     }
     public static ArrayList<TeamStatsRecentMatchesResponse> getTeamStatsRecentMatches(String teamName, String format,
                                                                                       String venue, int numMatches,
@@ -104,18 +106,21 @@ public class TeamStatsQuery {
         sqlQuery += " order by match.date desc limit ?), " +
                 "     players as (select player.name, innings_num, runs_scored, balls_played, num_fours, num_sixes, " +
                 "                        (runs_scored >= 50) as is_fifty, (runs_scored >= 100) as is_hundred, " +
-                "                        (runs_scored = 0 and status!='not out') as is_duck from player_batting_score " +
+                "                        (runs_scored = 0 and status!='not out') as is_duck, (status='not out') as is_not_out from player_batting_score " +
                 "                 join player on player.id = player_batting_score.player_id " +
                 "                 join matches on matches.id = player_batting_score.match_id " +
-                "                 where player_batting_score.team_played_for = ? ";
+                "                 where balls_played != 0 and player_batting_score.team_played_for = ? ";
         if (againstTeam != null) sqlQuery += " and player_batting_score.team_played_against = ? ";
-        sqlQuery += ") select players.name, COUNT(players.innings_num) as num_innings, SUM(players.runs_scored) as runs_scored, " +
-                "        MAX(players.runs_scored) as high_score, " +
-                "        SUM(players.balls_played) as balls_played, SUM(players.num_fours) as num_fours, " +
-                "        SUM(players.num_sixes) as num_sixes, " +
-                "        SUM(players.is_fifty::int) as num_fifties, SUM(players.is_hundred::int) as num_hundreds, " +
-                "        SUM(players.is_duck::int) as num_ducks from players " +
-                " group by players.name ";
+        sqlQuery += "), players_stats as (select players.name, COUNT(players.innings_num) as num_innings, SUM(players.runs_scored) as runs_scored, " +
+                "                                MAX(players.runs_scored) as high_score, " +
+                "                                SUM(players.balls_played) as balls_played, SUM(players.num_fours) as num_fours, " +
+                "                                SUM(players.num_sixes) as num_sixes, " +
+                "                                SUM(players.is_fifty::int) as num_fifties, SUM(players.is_hundred::int) as num_hundreds, " +
+                "                                SUM(players.is_duck::int) as num_ducks, SUM(is_not_out::int) as num_not_outs from players " +
+                "                         group by players.name) " +
+                "   select *, round((runs_scored*100.0/balls_played), 2) as strike_rate, round(runs_scored*1.0/(num_innings-num_not_outs), 2) as average from players_stats " +
+                "   where num_innings > num_not_outs ";
+
         switch(statsType) {
             case MOST_RUNS: sqlQuery += " order by runs_scored desc, balls_played asc "; break;
             case MOST_FOURS: sqlQuery += " order by num_fours desc, runs_scored desc, balls_played asc ";break;
@@ -123,6 +128,8 @@ public class TeamStatsQuery {
             case MOST_FIFTIES: sqlQuery += " order by num_fifties desc, runs_scored desc, balls_played asc ";break;
             case MOST_HUNDREDS: sqlQuery += " order by num_hundreds desc, runs_scored desc, balls_played asc ";break;
             case MOST_DUCKS: sqlQuery += " order by num_ducks desc, runs_scored desc, balls_played asc ";break;
+            case HIGH_STRIKE_RATE: sqlQuery += " order by strike_rate desc, runs_scored desc, balls_played asc ";break;
+            case HIGH_AVERAGE: sqlQuery += " order by average desc, runs_scored desc, balls_played asc ";break;
         }
 
         try {
@@ -137,23 +144,24 @@ public class TeamStatsQuery {
                 preparedStatement.setInt(++parameterIndex, numMatches);
                 preparedStatement.setString(++parameterIndex, teamName);
                 if (againstTeam != null) preparedStatement.setString(++parameterIndex, againstTeam);
+//                System.out.println(preparedStatement.toString());
                 {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     while (resultSet.next()) {
-                        int ballsPlayed = resultSet.getInt("balls_played");
-                        if (ballsPlayed == 0) continue;
                         response.add(new TeamStatsBattingCommonResponse(
                                 resultSet.getString("name"),
                                 resultSet.getInt("num_innings"),
                                 resultSet.getInt("runs_scored"),
-                                ballsPlayed,
-                                (new BigDecimal(resultSet.getInt("runs_scored")*100.0/ballsPlayed)).setScale(2, RoundingMode.FLOOR),
+                                resultSet.getInt("balls_played"),
+                                resultSet.getBigDecimal("average"),
+                                resultSet.getBigDecimal("strike_rate"),
                                 resultSet.getInt("high_score"),
                                 resultSet.getInt("num_fours"),
                                 resultSet.getInt("num_sixes"),
                                 resultSet.getInt("num_ducks"),
                                 resultSet.getInt("num_fifties"),
-                                resultSet.getInt("num_hundreds")));
+                                resultSet.getInt("num_hundreds"),
+                                resultSet.getInt("num_not_outs")));
                     }
                     resultSet.close();
                 }

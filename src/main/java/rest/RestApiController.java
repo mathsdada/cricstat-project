@@ -129,4 +129,26 @@ public class RestApiController {
     ) {
         return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.MOST_DUCKS);
     }
+
+    @RequestMapping("/team_stats/batting/highest_strike_rate")
+    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingHighStrikeRate(
+            @RequestParam(value = "name", required = true) String teamName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "venue", required = false) String venue,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
+            @RequestParam(value = "against_team", required = false) String againstTeam
+    ) {
+        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.HIGH_STRIKE_RATE);
+    }
+
+    @RequestMapping("/team_stats/batting/highest_average")
+    public ArrayList<TeamStatsBattingCommonResponse> teamStatsBattingHighAverage(
+            @RequestParam(value = "name", required = true) String teamName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "venue", required = false) String venue,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches,
+            @RequestParam(value = "against_team", required = false) String againstTeam
+    ) {
+        return TeamStatsQuery.getTeamStatsBattingCommonStats(teamName, format, venue, numMatches, againstTeam, TeamStatsQuery.CommonBattingStats.HIGH_AVERAGE);
+    }
 }
