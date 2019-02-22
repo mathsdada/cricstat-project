@@ -142,11 +142,21 @@ public class RestApiController {
     }
 
     @RequestMapping("/venue_stats/recent_matches")
-    public ArrayList<VenueStatsRecentMatchesResponse> venueStatsRecentMatches(@RequestParam(value = "name", required = true) String venueName,
-                                        @RequestParam(value = "format", required = false) String format,
-                                        @RequestParam(value = "num_matches", defaultValue = "10") int numMatches) {
+    public ArrayList<VenueStatsRecentMatchesResponse> venueStatsRecentMatches(
+            @RequestParam(value = "name", required = true) String venueName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches) {
         return VenueStatsQuery.getVenueStatsRecentMatches(venueName, format, numMatches);
     }
+
+    @RequestMapping("/venue_stats/avg_per_innings_score")
+    public ArrayList<VenueStatsQuery.AvgInningsScore> venueStatsAvgInningScores(
+            @RequestParam(value = "name", required = true) String venueName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches) {
+        return VenueStatsQuery.getVenueAveragePerInningsScore(venueName, format, numMatches);
+    }
+
 
     @RequestMapping({
             "/venue_stats/batting/most_runs",
