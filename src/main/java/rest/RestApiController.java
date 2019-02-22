@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import rest.Query.PlayerBowlingStatsQuery;
 import rest.Query.TeamStatsQuery;
+import rest.Query.VenueStatsQuery;
 import rest.Response.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -138,5 +139,12 @@ public class RestApiController {
             default: return new ArrayList<>();
         }
         return TeamStatsQuery.getTeamStatsBowlingCommonStats(teamName, format, venue, numMatches, againstTeam, statsType);
+    }
+
+    @RequestMapping("/venue_stats/recent_matches")
+    public ArrayList<VenueStatsRecentMatchesResponse> venueStatsRecentMatches(@RequestParam(value = "name", required = true) String venueName,
+                                        @RequestParam(value = "format", required = false) String format,
+                                        @RequestParam(value = "num_matches", defaultValue = "10") int numMatches) {
+        return VenueStatsQuery.getVenueStatsRecentMatches(venueName, format, numMatches);
     }
 }

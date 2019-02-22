@@ -1,6 +1,7 @@
 package rest.Query;
 
 import Database.DatabaseEngine;
+import rest.Response.PerInningsMatchScore;
 import rest.Response.TeamStatsBattingCommonResponse;
 import rest.Response.TeamStatsBowlingCommonResponse;
 import rest.Response.TeamStatsRecentMatchesResponse;
@@ -42,13 +43,15 @@ public class TeamStatsQuery {
             return response;
         }
         String sqlQuery = "" +
-                "select id, innings_num, batting_team, bowling_team, runs, wickets, overs, outcome, status, " +
-                        " winning_team, format, venue, date from match " +
-                " join innings_score on innings_score.match_id = match.id where ?=any(teams) ";
+                "with matches as (select id, outcome, status, winning_team, format, venue, date from match where ?=any(teams) ";
         if (againstTeam != null) sqlQuery += " and ?=any(teams) ";
         if (format != null) sqlQuery += " and format = ? ";
         if (venue != null) sqlQuery += " and venue = ? ";
-        sqlQuery += " order by match.date desc, innings_num asc limit ?";
+        sqlQuery += " order by match.date desc, match.id desc limit ?) " +
+                    " select id, innings_num, batting_team, bowling_team, runs, wickets, overs, outcome, status, " +
+                    "        winning_team, format, venue, date from matches " +
+                    " join innings_score on innings_score.match_id = matches.id " +
+                    " order by matches.date desc, matches.id desc, innings_num asc ";
 
         try {
             int parameterIndex = 0;
@@ -66,8 +69,8 @@ public class TeamStatsQuery {
                     TeamStatsRecentMatchesResponse match = null;
                     while (resultSet.next()) {
                         int currentMatchId = resultSet.getInt("id");
-                        TeamStatsRecentMatchesResponse.PerInningsMatchScore perInningsMatchScore =
-                                new TeamStatsRecentMatchesResponse.PerInningsMatchScore(
+                        PerInningsMatchScore perInningsMatchScore =
+                                new PerInningsMatchScore(
                                         resultSet.getInt("innings_num"),
                                         resultSet.getString("batting_team"),
                                         resultSet.getString("bowling_team"),
