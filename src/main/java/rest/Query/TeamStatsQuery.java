@@ -110,21 +110,36 @@ public class TeamStatsQuery {
                                                                                            String venue, int numMatches,
                                                                                            String againstTeam, CommonBattingStats statsType) {
         ArrayList<TeamStatsBattingCommonResponse> response = new ArrayList<>();
-        if (againstTeam != null && againstTeam.equals(teamName)) {
+        if (teamName == null && format == null && venue == null && againstTeam == null) {
+            /* Make sure atleast one argument is valid before proceeding further */
+            return response;
+        }
+        if (againstTeam != null && teamName != null && againstTeam.equals(teamName)) {
             /* Do not proceed further the request if againstTeam is same as teamName */
             return response;
         }
-        String sqlQuery = " with matches as (select id from match where ?=any(teams) ";
-        if (againstTeam != null) sqlQuery += " and ?=any(teams) ";
-        if (format != null) sqlQuery += " and format=? ";
-        if (venue != null) sqlQuery += " and venue = ? ";
+        String sqlQuery = " with matches as (select id from match where ";
+        if (teamName != null) sqlQuery += " ?=any(teams) ";
+        if (againstTeam != null) {
+            if (teamName != null) sqlQuery += " and ";
+            sqlQuery += " ?=any(teams) ";
+        }
+        if (format != null) {
+            if (teamName != null || againstTeam != null) sqlQuery += " and ";
+            sqlQuery += " format=? ";
+        }
+        if (venue != null) {
+            if (teamName != null || againstTeam != null || format != null) sqlQuery += " and ";
+            sqlQuery += " venue = ? ";
+        }
         sqlQuery += " order by match.date desc limit ?), " +
                 "     players as (select player.name, innings_num, runs_scored, balls_played, num_fours, num_sixes, " +
                 "                        (runs_scored >= 50) as is_fifty, (runs_scored >= 100) as is_hundred, " +
                 "                        (runs_scored = 0 and status!='not out') as is_duck, (status='not out') as is_not_out from player_batting_score " +
                 "                 join player on player.id = player_batting_score.player_id " +
                 "                 join matches on matches.id = player_batting_score.match_id " +
-                "                 where balls_played != 0 and player_batting_score.team_played_for = ? ";
+                "                 where balls_played != 0 ";
+        if (teamName != null) sqlQuery += " and player_batting_score.team_played_for = ? ";
         if (againstTeam != null) sqlQuery += " and player_batting_score.team_played_against = ? ";
         sqlQuery += "), players_stats as (select players.name, COUNT(players.innings_num) as num_innings, SUM(players.runs_scored) as runs_scored, " +
                 "                                MAX(players.runs_scored) as high_score, " +
@@ -152,14 +167,13 @@ public class TeamStatsQuery {
             Connection connection = DatabaseEngine.getInstance().getConnection();
             {
                 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-                preparedStatement.setString(++parameterIndex, teamName);
+                if (teamName != null) preparedStatement.setString(++parameterIndex, teamName);
                 if (againstTeam != null) preparedStatement.setString(++parameterIndex, againstTeam);
                 if (format != null) preparedStatement.setString(++parameterIndex, format);
                 if (venue != null) preparedStatement.setString(++parameterIndex, venue);
                 preparedStatement.setInt(++parameterIndex, numMatches);
-                preparedStatement.setString(++parameterIndex, teamName);
+                if (teamName != null) preparedStatement.setString(++parameterIndex, teamName);
                 if (againstTeam != null) preparedStatement.setString(++parameterIndex, againstTeam);
-//                System.out.println(preparedStatement.toString());
                 {
                     ResultSet resultSet = preparedStatement.executeQuery();
                     while (resultSet.next()) {
@@ -192,21 +206,42 @@ public class TeamStatsQuery {
                                                                                            String venue, int numMatches,
                                                                                            String againstTeam, CommonBowlingStats statsType) {
         ArrayList<TeamStatsBowlingCommonResponse> response = new ArrayList<>();
-        if (againstTeam != null && againstTeam.equals(teamName)) {
+        if (teamName == null && format == null && venue == null && againstTeam == null) {
+            /* Make sure atleast one argument is valid before proceeding further */
+            return response;
+        }
+        if (againstTeam != null && teamName != null && againstTeam.equals(teamName)) {
             /* Do not proceed further the request if againstTeam is same as teamName */
             return response;
         }
-        String sqlQuery = " with matches as (select id from match where ?=any(teams) ";
-        if (againstTeam != null) sqlQuery += " and ?=any(teams) ";
-        if (format != null) sqlQuery += " and format=? ";
-        if (venue != null) sqlQuery += " and venue = ? ";
+        /* MUST add check at the beginning to make sure atleast one of teamName, format, venue, againstTeam is not NULL.
+                if not handled properly, SQL might throw exception because "where" in below statement.
+         */
+        String sqlQuery = " with matches as (select id from match where ";
+        if (teamName != null) sqlQuery += " ?=any(teams) ";
+        if (againstTeam != null) {
+            if (teamName != null) sqlQuery += " and ";
+            sqlQuery += " ?=any(teams) ";
+        }
+        if (format != null) {
+            if (teamName != null || againstTeam != null) sqlQuery += " and ";
+            sqlQuery += " format=? ";
+        }
+        if (venue != null) {
+            if (teamName != null || againstTeam != null || format != null) sqlQuery += " and ";
+            sqlQuery += " venue = ? ";
+        }
         sqlQuery += " order by match.date desc limit ?), " +
                 "     players as (select player.name, innings_num, runs_given, overs_bowled, wickets_taken, num_maidens, " +
                 "                        (wickets_taken >= 4) as is_four_plus, (wickets_taken >= 5) as is_five_plus from player_bowling_score " +
                 "                 join player on player.id = player_bowling_score.player_id " +
-                "                 join matches on matches.id = player_bowling_score.match_id " +
-                "                 where player_bowling_score.team_played_for = ? ";
-        if (againstTeam != null) sqlQuery += " and player_bowling_score.team_played_against = ? ";
+                "                 join matches on matches.id = player_bowling_score.match_id ";
+        if (teamName != null) sqlQuery += " where player_bowling_score.team_played_for = ? ";
+        if (againstTeam != null) {
+            if (teamName == null) sqlQuery += " where ";
+            else sqlQuery += " and ";
+            sqlQuery += " player_bowling_score.team_played_against = ? ";
+        }
         sqlQuery += "), players_stats as (select players.name, COUNT(players.innings_num) as num_innings, SUM(players.runs_given) as runs_given, " +
                 "                                SUM(players.overs_bowled) as overs_bowled, SUM(players.wickets_taken) as wickets_taken, " +
                 "                                SUM(players.num_maidens) as num_maidens, " +
@@ -231,12 +266,12 @@ public class TeamStatsQuery {
             Connection connection = DatabaseEngine.getInstance().getConnection();
             {
                 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-                preparedStatement.setString(++parameterIndex, teamName);
+                if (teamName != null) preparedStatement.setString(++parameterIndex, teamName);
                 if (againstTeam != null) preparedStatement.setString(++parameterIndex, againstTeam);
                 if (format != null) preparedStatement.setString(++parameterIndex, format);
                 if (venue != null) preparedStatement.setString(++parameterIndex, venue);
                 preparedStatement.setInt(++parameterIndex, numMatches);
-                preparedStatement.setString(++parameterIndex, teamName);
+                if (teamName != null) preparedStatement.setString(++parameterIndex, teamName);
                 if (againstTeam != null) preparedStatement.setString(++parameterIndex, againstTeam);
                 {
                     ResultSet resultSet = preparedStatement.executeQuery();

@@ -147,4 +147,78 @@ public class RestApiController {
                                         @RequestParam(value = "num_matches", defaultValue = "10") int numMatches) {
         return VenueStatsQuery.getVenueStatsRecentMatches(venueName, format, numMatches);
     }
+
+    @RequestMapping({
+            "/venue_stats/batting/most_runs",
+            "/venue_stats/batting/most_fours",
+            "/venue_stats/batting/most_sixes",
+            "/venue_stats/batting/most_fifties",
+            "/venue_stats/batting/most_hundreds",
+            "/venue_stats/batting/most_ducks",
+            "/venue_stats/batting/highest_strike_rate",
+            "/venue_stats/batting/highest_average"})
+    public ArrayList<TeamStatsBattingCommonResponse> venueStatsBattingCommon(
+            HttpServletRequest request,
+            @RequestParam(value = "name", required = true) String venueName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches
+    ) {
+        TeamStatsQuery.CommonBattingStats statsType;
+        switch (request.getRequestURI()) {
+            case "/venue_stats/batting/most_runs":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_RUNS; break;
+            case "/venue_stats/batting/most_fours":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_FOURS; break;
+            case "/venue_stats/batting/most_sixes":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_SIXES; break;
+            case "/venue_stats/batting/most_fifties":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_FIFTIES; break;
+            case "/venue_stats/batting/most_hundreds":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_HUNDREDS; break;
+            case "/venue_stats/batting/most_ducks":
+                statsType = TeamStatsQuery.CommonBattingStats.MOST_DUCKS; break;
+            case "/venue_stats/batting/highest_strike_rate":
+                statsType = TeamStatsQuery.CommonBattingStats.HIGH_STRIKE_RATE; break;
+            case "/venue_stats/batting/highest_average":
+                statsType = TeamStatsQuery.CommonBattingStats.HIGH_AVERAGE; break;
+            default: return new ArrayList<>();
+        }
+        return TeamStatsQuery.getTeamStatsBattingCommonStats(null, format, venueName, numMatches, null, statsType);
+    }
+
+    @RequestMapping({
+            "/venue_stats/bowling/most_wickets",
+            "/venue_stats/bowling/most_maidens",
+            "/venue_stats/bowling/most_four_plus_wkts",
+            "/venue_stats/bowling/most_five_plus_wkts",
+            "/venue_stats/bowling/best_average",
+            "/venue_stats/bowling/best_strike_rate",
+            "/venue_stats/bowling/best_economy"})
+    public ArrayList<TeamStatsBowlingCommonResponse> venueStatsBowlingCommon(
+            HttpServletRequest request,
+            @RequestParam(value = "name", required = true) String venueName,
+            @RequestParam(value = "format", required = false) String format,
+            @RequestParam(value = "num_matches", defaultValue = "10") int numMatches
+    ) {
+        TeamStatsQuery.CommonBowlingStats statsType;
+        switch (request.getRequestURI()) {
+            case "/venue_stats/bowling/most_wickets":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_WICKETS; break;
+            case "/venue_stats/bowling/most_maidens":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_MAIDENS; break;
+            case "/venue_stats/bowling/most_four_plus_wkts":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_FOUR_PLUS_WKTS; break;
+            case "/venue_stats/bowling/most_five_plus_wkts":
+                statsType = TeamStatsQuery.CommonBowlingStats.MOST_FIVE_PLUS_WKTS; break;
+            case "/venue_stats/bowling/best_average":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_AVERAGE; break;
+            case "/venue_stats/bowling/best_economy":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_ECONOMY; break;
+            case "/venue_stats/bowling/best_strike_rate":
+                statsType = TeamStatsQuery.CommonBowlingStats.BEST_STRIKE_RATE; break;
+            default: return new ArrayList<>();
+        }
+        return TeamStatsQuery.getTeamStatsBowlingCommonStats(null, format, venueName, numMatches, null, statsType);
+    }
+
 }
