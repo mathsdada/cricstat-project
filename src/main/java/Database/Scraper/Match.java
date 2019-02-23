@@ -15,7 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 class Match {
@@ -28,7 +27,8 @@ class Match {
         // Match Title & Link & ID
         String title = matchTitleElement.text().toLowerCase();
         String url = matchTitleElement.attr("href");
-        if (!url.contains("cricket-scores")) {
+        if (url.contains("live-cricket-scores") ||
+                !url.contains("cricket-scores")) {
             return null;
         }
         String id = url.split(Pattern.quote("/"))[2];
@@ -57,30 +57,26 @@ class Match {
         // Match Format
         String format = matchInfoExtractor.extractFormat(title, seriesFormats);
 
-        if (venue != null && format != null) {
-            Document iScorecardDoc = Common.getDocument(Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + id);
-            matchInfoExtractor = new MatchInfoExtractor(iScorecardDoc);
-
-            Long matchDate = matchInfoExtractor.extractMatchDate();
-            ArrayList<Team> teams = matchInfoExtractor.extractPlayingTeams(iScorecardDoc, title, playerCacheMap);
-
-            Database.Model.Match.MatchType matchType = matchInfoExtractor.extractMatchType(status, url);
-            System.out.println(matchType + " " + Configuration.HOMEPAGE + url);
-            if (matchType == Database.Model.Match.MatchType.INVALID) return null;
-
-            Database.Model.Match match = new Database.Model.Match(id, title, format, venue, status, outcome, matchDate,
-                    teams, matchType);
-            if (matchType == Database.Model.Match.MatchType.ARCHIVE) {
-                match.setWinningTeam(matchInfoExtractor.extractWinningTeam(match.getStatus(), match.getOutcome(), match.getTeams()));
-                HashMap<Database.Model.Player, Team> playerTeamHashMap = getPlayerTeamHashMap(match.getTeams());
-                match.setInningsScores(new MatchScoreExtractor().extractMatchScores(iScorecardDoc, match.getTeams(), playerTeamHashMap));
-                match.setHeadToHeadList(new MatchCommentaryExtractor(
-                        Common.getDocument(Configuration.HOMEPAGE + url),
-                        playerTeamHashMap).getHeadToHead());
-            }
+        if (venue != null && status != null && format != null) {
+            Database.Model.Match match = new Database.Model.Match(Configuration.HOMEPAGE + url, id, title, format, venue, status, outcome);
+            scrape(match, playerCacheMap);
             return match;
         }
         return null;
+    }
+
+    private static void scrape(Database.Model.Match match, HashMap<String, Database.Model.Player> playerCacheMap) {
+        String scoreCardUrl = Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + match.getId();
+        Document iScorecardDoc = Common.getDocument(scoreCardUrl);
+        Document commentaryDoc = Common.getDocument(match.getUrl());
+
+        MatchInfoExtractor matchInfoExtractor = new MatchInfoExtractor(iScorecardDoc);
+        match.setDate(matchInfoExtractor.extractMatchDate());
+        match.setTeams(matchInfoExtractor.extractPlayingTeams(iScorecardDoc, match.getTitle(), playerCacheMap));
+        match.setWinningTeam(matchInfoExtractor.extractWinningTeam(match.getStatus(), match.getOutcome(), match.getTeams()));
+        HashMap<Database.Model.Player, Team> playerTeamHashMap = getPlayerTeamHashMap(match.getTeams());
+        match.setInningsScores(new MatchScoreExtractor().extractMatchScores(iScorecardDoc, match.getTeams(), playerTeamHashMap));
+        match.setHeadToHeadList(new MatchCommentaryExtractor(commentaryDoc, playerTeamHashMap).getHeadToHead());
     }
 
     private static class MatchInfoExtractor {
@@ -156,16 +152,14 @@ class Match {
         }
 
         Long extractMatchDate() {
-            String dateTimeStr = mMatchInfo.get("Date");
+            String dateStr = mMatchInfo.get("Date");
             //        Examples: 1) Friday, January 05, 2018 - Tuesday, January 09, 2018
             //                  2) Tuesday, February 13, 2018
-            dateTimeStr = dateTimeStr.split(Pattern.quote(" - "))[0].strip();
-            dateTimeStr += " " + mMatchInfo.get("Time");
-            SimpleDateFormat inputSdf = new SimpleDateFormat("EEEE, MMM dd, yyyy" + " " + "hh:mm a");
-            inputSdf.setTimeZone(TimeZone.getTimeZone("GMT"));
+            dateStr = dateStr.split(Pattern.quote(" - "))[0].strip();
+            SimpleDateFormat inputSdf = new SimpleDateFormat("EEEE, MMM dd, yyyy");
             try {
                 /* return Epoch Time */
-                return inputSdf.parse(dateTimeStr).getTime();
+                return inputSdf.parse(dateStr).getTime();
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -208,17 +202,6 @@ class Match {
                 }
             }
             return teams;
-        }
-
-        Database.Model.Match.MatchType extractMatchType(String matchStatus, String url) {
-            if (!url.contains("live-cricket-scores")) {
-                if (matchStatus != null) return Database.Model.Match.MatchType.ARCHIVE; /* COMPLETED and Commentary is available to SCrape */
-                return Database.Model.Match.MatchType.INVALID; /* We will not hit this case mostly */
-            } else {
-                if (matchStatus != null) return Database.Model.Match.MatchType.INVALID; /* COMPLETED but commentary is not available to scrape */
-                else if (mMatchInfo.containsKey("Toss")) return Database.Model.Match.MatchType.INVALID; /* IN-PROGRESS */
-                else return Database.Model.Match.MatchType.SCHEDULE; /* Match is not yet Started */
-            }
         }
     }
 

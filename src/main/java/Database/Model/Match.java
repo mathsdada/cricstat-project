@@ -3,6 +3,7 @@ package Database.Model;
 import java.util.ArrayList;
 
 public class Match {
+    private String mUrl;
     private int mId;
     private String mTitle;
     private String mFormat;
@@ -14,24 +15,23 @@ public class Match {
     private ArrayList<Team> mTeams;
     private ArrayList<InningsScore> mInningsScores;
     private ArrayList<HeadToHead> mHeadToHeadList;
-    private MatchType mMatchType;
 
-    public Match(String id, String title, String format, String venue, String status, String outcome, Long matchDate, ArrayList<Team> teams, MatchType matchType) {
+    public Match(String url, String id, String title, String format, String venue, String status, String outcome) {
+        mUrl = url;
         mId = Integer.parseInt(id);
         mTitle = title;
         mFormat = format;
         mVenue = venue;
-        mDate = matchDate;
-        mTeams = teams;
         mStatus = status;
         mOutcome = outcome;
-        mMatchType = matchType;
     }
 
-    public enum MatchType {
-        INVALID,
-        SCHEDULE,
-        ARCHIVE
+    public String getUrl() {
+        return mUrl;
+    }
+
+    public void setUrl(String url) {
+        mUrl = url;
     }
 
     public int getId() {
@@ -120,10 +120,6 @@ public class Match {
 
     public void setHeadToHeadList(ArrayList<HeadToHead> headToHeadList) {
         mHeadToHeadList = headToHeadList;
-    }
-
-    public MatchType getMatchType() {
-        return mMatchType;
     }
 }
 
