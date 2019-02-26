@@ -26,9 +26,9 @@ public class Schedule {
             PRIMARY KEY (id)
         )
     */
+    @SuppressWarnings("unchecked")
     public static void insert(Connection connection, int id, String title, String format, String venue, Long date,
-                              ArrayList<Team> teams, String series) throws SQLException {
-        clear(connection);
+                              ArrayList<Team> teams, String series, String category) throws SQLException {
         JSONArray teamsJsonArray = new JSONArray();
         for (Team team: teams) {
             JSONArray squadJsonArray = new JSONArray();
@@ -45,7 +45,7 @@ public class Schedule {
             teamJsonObject.put("squad", squadJsonArray);
             teamsJsonArray.add(teamJsonObject);
         }
-        String SQL = "INSERT INTO schedule VALUES (?, ?, ?, ?, ?, ?, ?::json, ?::json)";
+        String SQL = "INSERT INTO schedule VALUES (?, ?, ?, ?, ?, ?, ?::json, ?::json, ?)";
 
         PreparedStatement preparedStatement = connection.prepareStatement(SQL);
         preparedStatement.setInt(1, id);
@@ -56,11 +56,12 @@ public class Schedule {
         preparedStatement.setString(6, series);
         preparedStatement.setString(7, teamsJsonArray.get(0).toString());
         preparedStatement.setString(8, teamsJsonArray.get(1).toString());
+        preparedStatement.setString(9, category);
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
 
-    private static void clear(Connection connection) throws SQLException {
+    public static void clear(Connection connection) throws SQLException {
         String SQL = "DELETE FROM schedule";
         Statement statement = connection.createStatement();
         int rows = statement.executeUpdate(SQL);

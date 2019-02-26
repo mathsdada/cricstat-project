@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TimeZone;
 import java.util.regex.Pattern;
 
 class Match {
@@ -61,10 +62,14 @@ class Match {
             e.printStackTrace();
         }
 
-        if (matchType == MatchType.SCHEDULE || matchType == MatchType.ARCHIVE) {
-            Database.Model.Match match = new Database.Model.Match(Configuration.HOMEPAGE + url, id, title, format, venue, status, outcome);
-            Document iScorecardDoc = Common.getDocument(Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + match.getId());
+        if (matchType != MatchType.INVALID) {
+            Document iScorecardDoc = Common.getDocument(Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + id);
             matchInfoExtractor = new MatchInfoExtractor(iScorecardDoc);
+            if (matchType == MatchType.SCHEDULE && matchInfoExtractor.getTossStatus()) {
+                /* If Toss happened means match has already started..so don't consider this as schedule match */
+                return null;
+            }
+            Database.Model.Match match = new Database.Model.Match(Configuration.HOMEPAGE + url, id, title, format, venue, status, outcome);
             match.setDate(matchInfoExtractor.extractMatchDate());
             match.setTeams(matchInfoExtractor.extractPlayingTeams(iScorecardDoc, match.getTitle(), playerCacheMap));
 
@@ -153,14 +158,16 @@ class Match {
         }
 
         Long extractMatchDate() {
-            String dateStr = mMatchInfo.get("Date");
+            String dateTimeStr = mMatchInfo.get("Date");
             //        Examples: 1) Friday, January 05, 2018 - Tuesday, January 09, 2018
             //                  2) Tuesday, February 13, 2018
-            dateStr = dateStr.split(Pattern.quote(" - "))[0].strip();
-            SimpleDateFormat inputSdf = new SimpleDateFormat("EEEE, MMM dd, yyyy");
+            dateTimeStr = dateTimeStr.split(Pattern.quote(" - "))[0].strip();
+            dateTimeStr += " " + mMatchInfo.get("Time");
+            SimpleDateFormat inputSdf = new SimpleDateFormat("EEEE, MMM dd, yyyy" + " " + "hh:mm a");
+            inputSdf.setTimeZone(TimeZone.getTimeZone("GMT"));
             try {
                 /* return Epoch Time */
-                return inputSdf.parse(dateStr).getTime();
+                return inputSdf.parse(dateTimeStr).getTime();
             } catch (ParseException e) {
                 e.printStackTrace();
             }
@@ -203,6 +210,10 @@ class Match {
                 }
             }
             return teams;
+        }
+
+        boolean getTossStatus() {
+            return mMatchInfo.containsKey("Toss");
         }
     }
 

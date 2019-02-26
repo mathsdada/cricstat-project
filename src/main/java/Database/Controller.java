@@ -95,10 +95,11 @@ public class Controller {
         try {
             Connection connection = DatabaseEngine.getInstance().getConnection();
             ArrayList<Database.Model.ScheduleMatch> matches = ScheduleMatch.build(date);
+            Database.Tables.Schedule.clear(connection);
             for (Database.Model.ScheduleMatch scheduleMatch: matches) {
                 Match match = scheduleMatch.getMatch();
                 Database.Tables.Schedule.insert(connection, match.getId(), match.getTitle(), match.getFormat(),
-                        match.getVenue(), match.getDate(), match.getTeams(), scheduleMatch.getSeries());
+                        match.getVenue(), match.getDate(), match.getTeams(), scheduleMatch.getSeries(), scheduleMatch.getCategory());
             }
             DatabaseEngine.getInstance().releaseConnection();
         } catch (SQLException e) {
