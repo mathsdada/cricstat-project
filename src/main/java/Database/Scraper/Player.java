@@ -16,13 +16,18 @@ public class Player {
         String playerName = StringUtils.correctPlayerName(playerElement.text()).toLowerCase();
 
         String playerId = playerUrl.split(Pattern.quote("/"))[2];
-        if(!playerCacheMap.containsKey(playerId)) {
-            HashMap<String, String> profileMap = getProfileMap(Configuration.HOMEPAGE + playerUrl);
-            playerCacheMap.put(playerId,
-                    new Database.Model.Player(playerId, playerName, profileMap.get("role"), profileMap.get("batting style"), profileMap.get("bowling style")));
+        if (playerCacheMap != null) {
+            if(!playerCacheMap.containsKey(playerId)) {
+                HashMap<String, String> profileMap = getProfileMap(Configuration.HOMEPAGE + playerUrl);
+                playerCacheMap.put(playerId,
+                        new Database.Model.Player(playerId, playerName, profileMap.get("role"), profileMap.get("batting style"), profileMap.get("bowling style")));
+            }
+            return playerCacheMap.get(playerId);
         }
-        return playerCacheMap.get(playerId);
+        HashMap<String, String> profileMap = getProfileMap(Configuration.HOMEPAGE + playerUrl);
+        return new Database.Model.Player(playerId, playerName, profileMap.get("role"), profileMap.get("batting style"), profileMap.get("bowling style"));
     }
+
     private static HashMap<String, String> getProfileMap(String playerUrl) {
         HashMap<String, String> profileMap = new HashMap<>();
         profileMap.put("role",  null);

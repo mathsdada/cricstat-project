@@ -18,65 +18,66 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 class Match {
+    public enum MatchType {
+        INVALID,
+        SCHEDULE,
+        ARCHIVE
+    }
+
     static Database.Model.Match build(Element matchElement, String seriesFormats, HashMap<String, Database.Model.Player> playerCacheMap) {
+        String id = null, outcome = null, status = null, venue = null, format = null;
+        MatchType matchType;
         MatchInfoExtractor matchInfoExtractor = new MatchInfoExtractor();
 
-        Elements matchTitleElement = matchElement.select("a.text-hvr-underline");
+        Element matchTitleElement = matchElement.selectFirst("a");
         Elements matchOutcomeElement = matchElement.select("a.cb-text-complete");
         Elements matchVenueElement = matchElement.select("div.text-gray");
         // Match Title & Link & ID
         String title = matchTitleElement.text().toLowerCase();
         String url = matchTitleElement.attr("href");
-        if (url.contains("live-cricket-scores") ||
-                !url.contains("cricket-scores")) {
-            return null;
+        // Match Status and Outcome
+        if (matchOutcomeElement != null) {
+            outcome = matchOutcomeElement.text().toLowerCase();
+            status = matchInfoExtractor.extractStatus(matchOutcomeElement);
         }
-        String id = url.split(Pattern.quote("/"))[2];
+        // Match Venue
+        if (matchVenueElement != null) {
+            venue = matchVenueElement.text().toLowerCase();
+        }
+        // Match Format
+        format = matchInfoExtractor.extractFormat(title, seriesFormats);
+
+        matchType = getMatchType(url, status, venue, format);
+
+        id = url.split(Pattern.quote("/"))[2];
         /* If matchID is already available in DB then do not scrape that match again */
         try {
             Connection connection = DatabaseEngine.getInstance().getConnection();
             if (Database.Tables.Match.isAvailable(connection, Integer.parseInt(id))) {
-                DatabaseEngine.getInstance().releaseConnection();
-                return null;
+                matchType = MatchType.INVALID;
             }
             DatabaseEngine.getInstance().releaseConnection();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        // Match Venue
-        String venue = null;
-        if (matchVenueElement != null) {
-            venue = matchVenueElement.text().toLowerCase();
-        }
-        // Match Status and Outcome
-        String outcome = null, status = null;
-        if (matchOutcomeElement != null) {
-            outcome = matchOutcomeElement.text().toLowerCase();
-            status = matchInfoExtractor.extractStatus(matchOutcomeElement);
-        }
-        // Match Format
-        String format = matchInfoExtractor.extractFormat(title, seriesFormats);
 
-        if (venue != null && status != null && format != null) {
+        if (matchType == MatchType.SCHEDULE || matchType == MatchType.ARCHIVE) {
             Database.Model.Match match = new Database.Model.Match(Configuration.HOMEPAGE + url, id, title, format, venue, status, outcome);
-            scrape(match, playerCacheMap);
+            Document iScorecardDoc = Common.getDocument(Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + match.getId());
+            matchInfoExtractor = new MatchInfoExtractor(iScorecardDoc);
+            match.setDate(matchInfoExtractor.extractMatchDate());
+            match.setTeams(matchInfoExtractor.extractPlayingTeams(iScorecardDoc, match.getTitle(), playerCacheMap));
+
+            if (matchType == MatchType.ARCHIVE) {
+                match.setWinningTeam(matchInfoExtractor.extractWinningTeam(match.getStatus(), match.getOutcome(), match.getTeams()));
+                HashMap<Database.Model.Player, Team> playerTeamHashMap = getPlayerTeamHashMap(match.getTeams());
+                match.setInningsScores(new MatchScoreExtractor().extractMatchScores(iScorecardDoc, match.getTeams(), playerTeamHashMap));
+                match.setHeadToHeadList(new MatchCommentaryExtractor(Common.getDocument(match.getUrl()), playerTeamHashMap).getHeadToHead());
+            }
             return match;
+        } else {
+            return null;
         }
-        return null;
-    }
-
-    private static void scrape(Database.Model.Match match, HashMap<String, Database.Model.Player> playerCacheMap) {
-        String scoreCardUrl = Configuration.HOMEPAGE + "/api/html/cricket-scorecard/" + match.getId();
-        Document iScorecardDoc = Common.getDocument(scoreCardUrl);
-        Document commentaryDoc = Common.getDocument(match.getUrl());
-
-        MatchInfoExtractor matchInfoExtractor = new MatchInfoExtractor(iScorecardDoc);
-        match.setDate(matchInfoExtractor.extractMatchDate());
-        match.setTeams(matchInfoExtractor.extractPlayingTeams(iScorecardDoc, match.getTitle(), playerCacheMap));
-        match.setWinningTeam(matchInfoExtractor.extractWinningTeam(match.getStatus(), match.getOutcome(), match.getTeams()));
-        HashMap<Database.Model.Player, Team> playerTeamHashMap = getPlayerTeamHashMap(match.getTeams());
-        match.setInningsScores(new MatchScoreExtractor().extractMatchScores(iScorecardDoc, match.getTeams(), playerTeamHashMap));
-        match.setHeadToHeadList(new MatchCommentaryExtractor(commentaryDoc, playerTeamHashMap).getHeadToHead());
     }
 
     private static class MatchInfoExtractor {
@@ -405,6 +406,12 @@ class Match {
         return playerTeamHashMap;
     }
 
+    static Pair<String, String> getSeriesUrl(String matchUrl) {
+        Document matchDocument = Common.getDocument(Configuration.HOMEPAGE + matchUrl);
+        Element seriesElement = matchDocument.selectFirst("div.cb-nav-subhdr.cb-font-12").selectFirst("a");
+        return new Pair<String, String>(seriesElement.text(), seriesElement.attr("href"));
+    }
+
     private static Pair<Database.Model.Player, Team> findPlayer(String name, HashMap<Database.Model.Player, Team> playerTeamHashMap) {
         Database.Model.Player resPlayer = null;
         int curMaxLen = -1;
@@ -416,5 +423,26 @@ class Match {
             }
         }
         return new Pair<>(resPlayer, playerTeamHashMap.get(resPlayer));
+    }
+
+    /* if url contain cricket-scores then
+          if url contains live-cricket-scores then
+            if status is NULL then match is not yet started...this is schedule match..
+            else match is either in-progress or completed but full commentary is not yet scrapable..so do not proceed further..
+          else if status is not NULL then this is ARCHIVE match and is fully scrapable.
+          else match is invalid..do not proceed..
+        else match is invalid..do not proceed..
+     */
+    private static MatchType getMatchType(String url, String status, String venue, String format) {
+        MatchType matchType = MatchType.INVALID;
+        if (venue == null || format == null) return matchType;
+        if (url.contains("cricket-scores")) {
+            if (url.contains("live-cricket-scores")) {
+                if (status == null) matchType = MatchType.SCHEDULE;
+            } else {
+                if (status != null) matchType = MatchType.ARCHIVE;
+            }
+        }
+        return matchType;
     }
 }

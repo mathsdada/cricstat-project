@@ -2,25 +2,19 @@ package Database;
 
 import Database.Common.Pair;
 import Database.Common.StringUtils;
-import Database.Model.Season;
-import Database.Model.Series;
-import Database.Model.Match;
-import Database.Model.InningsScore;
-import Database.Model.PlayerBattingScore;
-import Database.Model.PlayerBowlingScore;
-import Database.Model.Player;
-import Database.Model.HeadToHead;
-import Database.Model.Team;
+import Database.Model.*;
+import Database.Scraper.ScheduleMatch;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class Controller {
     public static void updateStatsDatabase() {
         Connection connection = null;
         try {
-            connection = DatabaseEngine.getInstance().getConnection();
             Season season = Database.Scraper.Season.build("2019");
+            connection = DatabaseEngine.getInstance().getConnection();
             for (Series series: season.getSeriesList()) {
                 Database.Tables.Series.insert(connection, series.getId(), series.getTitle(), StringUtils.getGender(series.getTitle()));
                 for (Match match : series.getMatches()) {
@@ -84,6 +78,22 @@ public class Controller {
                                 headToHead.getHeadToHeadData().getNoBall());
                     }
                 }
+            }
+            DatabaseEngine.getInstance().releaseConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateScheduleDatabase() {
+        String date = "TUE, FEB 26 2019";
+        try {
+            Connection connection = DatabaseEngine.getInstance().getConnection();
+            ArrayList<Database.Model.ScheduleMatch> matches = ScheduleMatch.build(date);
+            for (Database.Model.ScheduleMatch scheduleMatch: matches) {
+                Match match = scheduleMatch.getMatch();
+                Database.Tables.Schedule.insert(connection, match.getId(), match.getTitle(), match.getFormat(),
+                        match.getVenue(), match.getDate(), match.getTeams(), scheduleMatch.getSeries());
             }
             DatabaseEngine.getInstance().releaseConnection();
         } catch (SQLException e) {

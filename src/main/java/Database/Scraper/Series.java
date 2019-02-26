@@ -42,7 +42,7 @@ class Series {
         return matches;
     }
 
-    private static String getSeriesFormat(Document seriesDocument) {
+    static String getSeriesFormat(Document seriesDocument) {
         Elements elements = seriesDocument.select("div.cb-col-100.cb-col.cb-nav-main.cb-bg-white").first()
                 .select("div");
         return elements.get(1).text().split(Pattern.quote(" . "))[0];
