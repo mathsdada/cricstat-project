@@ -1,12 +1,9 @@
 package rest;
 
-import rest.Query.PlayerBattingStatsQuery;
+import rest.Query.*;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import rest.Query.PlayerBowlingStatsQuery;
-import rest.Query.TeamStatsQuery;
-import rest.Query.VenueStatsQuery;
 import rest.Response.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -14,6 +11,10 @@ import java.util.ArrayList;
 
 @RestController
 public class RestApiController {
+    @RequestMapping("/schedule")
+    public ArrayList<ScheduleResponse> schedule(@RequestParam(value = "category", required = false) String category) {
+        return ScheduleQuery.getSchedule(category);
+    }
 
     @RequestMapping("/player_batting_stats")
     public ArrayList<PlayerBattingStatsResponse> playerBattingStats(

@@ -2,8 +2,8 @@ package Database.Tables;
 
 import Database.Model.Player;
 import Database.Model.Team;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import com.google.gson.Gson;
+import rest.Response.ScheduleResponse;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -26,26 +26,19 @@ public class Schedule {
             PRIMARY KEY (id)
         )
     */
-    @SuppressWarnings("unchecked")
     public static void insert(Connection connection, int id, String title, String format, String venue, Long date,
                               ArrayList<Team> teams, String series, String category) throws SQLException {
-        JSONArray teamsJsonArray = new JSONArray();
+        Gson gson = new Gson();
+        ArrayList<ScheduleResponse.ScheduleTeam> scheduleTeams = new ArrayList<>();
         for (Team team: teams) {
-            JSONArray squadJsonArray = new JSONArray();
+            ArrayList<ScheduleResponse.SchedulePlayer> squad = new ArrayList<>();
             for (Player player: team.getSquad()) {
-                JSONObject playerJson = new JSONObject();
-                playerJson.put("name", player.getName());
-                playerJson.put("role", player.getRole());
-                playerJson.put("batting_style", player.getBattingStyle());
-                playerJson.put("bowling_style", player.getBowlingStyle());
-                squadJsonArray.add(playerJson);
+                squad.add(new ScheduleResponse.SchedulePlayer(player.getName(), player.getRole(),
+                        player.getBattingStyle(), player.getBowlingStyle()));
             }
-            JSONObject teamJsonObject = new JSONObject();
-            teamJsonObject.put("name", team.getName());
-            teamJsonObject.put("squad", squadJsonArray);
-            teamsJsonArray.add(teamJsonObject);
+            scheduleTeams.add(new ScheduleResponse.ScheduleTeam(team.getName(), squad));
         }
-        String SQL = "INSERT INTO schedule VALUES (?, ?, ?, ?, ?, ?, ?::json, ?::json, ?)";
+        String SQL = "INSERT INTO schedule VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
         PreparedStatement preparedStatement = connection.prepareStatement(SQL);
         preparedStatement.setInt(1, id);
@@ -53,10 +46,9 @@ public class Schedule {
         preparedStatement.setString(3, format);
         preparedStatement.setString(4, venue);
         preparedStatement.setLong(5, date);
-        preparedStatement.setString(6, series);
-        preparedStatement.setString(7, teamsJsonArray.get(0).toString());
-        preparedStatement.setString(8, teamsJsonArray.get(1).toString());
-        preparedStatement.setString(9, category);
+        preparedStatement.setString(6, gson.toJson(scheduleTeams));
+        preparedStatement.setString(7, series);
+        preparedStatement.setString(8, category);
         preparedStatement.executeUpdate();
         preparedStatement.close();
     }
