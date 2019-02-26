@@ -7,6 +7,8 @@ import Database.Scraper.ScheduleMatch;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class Controller {
@@ -86,7 +88,10 @@ public class Controller {
     }
 
     public static void updateScheduleDatabase() {
-        String date = "TUE, FEB 26 2019";
+        /* "TUE, FEB 26 2019"; */
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, MMM dd YYYY");
+        String date = formatter.format(LocalDate.now()).toLowerCase();
+
         try {
             Connection connection = DatabaseEngine.getInstance().getConnection();
             ArrayList<Database.Model.ScheduleMatch> matches = ScheduleMatch.build(date);

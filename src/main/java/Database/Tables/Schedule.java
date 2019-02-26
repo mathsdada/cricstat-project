@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 
 public class Schedule {
@@ -27,6 +28,7 @@ public class Schedule {
     */
     public static void insert(Connection connection, int id, String title, String format, String venue, Long date,
                               ArrayList<Team> teams, String series) throws SQLException {
+        clear(connection);
         JSONArray teamsJsonArray = new JSONArray();
         for (Team team: teams) {
             JSONArray squadJsonArray = new JSONArray();
@@ -56,5 +58,13 @@ public class Schedule {
         preparedStatement.setString(8, teamsJsonArray.get(1).toString());
         preparedStatement.executeUpdate();
         preparedStatement.close();
+    }
+
+    private static void clear(Connection connection) throws SQLException {
+        String SQL = "DELETE FROM schedule";
+        Statement statement = connection.createStatement();
+        int rows = statement.executeUpdate(SQL);
+        statement.close();
+        System.out.println(rows + " Rows Deleted from Schedule Table");
     }
 }

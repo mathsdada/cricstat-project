@@ -16,7 +16,7 @@ public class ScheduleMatch {
         Element dateMatchElements = internationalScheduleDocument
                 .selectFirst("div#domestic-list.cb-bg-white") // this picks all dates
                 .selectFirst("div.cb-col-100.cb-col"); // this picks first date which is our preference
-        String date = dateMatchElements.select("div.cb-lv-grn-strip.text-bold").text();
+        String date = dateMatchElements.select("div.cb-lv-grn-strip.text-bold").text().toLowerCase();
         if (date.equals(dateRequested)) {
             Elements matchElements = dateMatchElements.select("div.cb-ovr-flo.cb-col-60.cb-col.cb-mtchs-dy-vnu");
             for (Element matchElement: matchElements) {
