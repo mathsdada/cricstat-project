@@ -21,11 +21,9 @@ public class ScheduleMatch {
             Elements matchElements = dateMatchElements.select("div.cb-ovr-flo.cb-col-60.cb-col.cb-mtchs-dy-vnu");
             for (Element matchElement: matchElements) {
                 Element matchUrlElement = matchElement.selectFirst("a");
-                System.out.println(matchUrlElement.text());
                 Pair<String, String> seriesTitleUrl = Database.Scraper.Match.getSeriesUrl(matchUrlElement.attr("href"));
                 String seriesTitle = seriesTitleUrl.getFirst();
                 String serieUrl = Configuration.HOMEPAGE + seriesTitleUrl.getSecond();
-                System.out.println(serieUrl);
                 Match match = Database.Scraper.Match.build(matchElement,
                         Database.Scraper.Series.getSeriesFormat(Common.getDocument(serieUrl)),
                         null);
