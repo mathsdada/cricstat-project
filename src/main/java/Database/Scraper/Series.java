@@ -34,7 +34,7 @@ class Series {
 
         Elements matchElements = seriesDocument.select("div.cb-col-60.cb-col.cb-srs-mtchs-tm");
         for (Element matchElement: matchElements) {
-            Database.Model.Match match = Match.build(matchElement, seriesFormat, playerCacheMap);
+            Database.Model.Match match = Match.build(matchElement, seriesFormat, playerCacheMap, Match.MatchType.ARCHIVE);
             if (match != null) {
                 matches.add(match);
             }

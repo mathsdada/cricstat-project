@@ -28,7 +28,7 @@ public class ScheduleMatch {
                     String serieUrl = Configuration.HOMEPAGE + seriesTitleUrl.getSecond();
                     Match match = Database.Scraper.Match.build(matchElement,
                             Database.Scraper.Series.getSeriesFormat(Common.getDocument(serieUrl)),
-                            null);
+                            null, Database.Scraper.Match.MatchType.SCHEDULE);
                     if (match != null) {
                         matches.add(new Database.Model.ScheduleMatch(seriesTitle, match, category));
                     }

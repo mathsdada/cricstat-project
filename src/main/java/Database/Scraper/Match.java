@@ -25,23 +25,37 @@ class Match {
         ARCHIVE
     }
 
-    static Database.Model.Match build(Element matchElement, String seriesFormats, HashMap<String, Database.Model.Player> playerCacheMap) {
+    static Database.Model.Match build(Element matchElement, String seriesFormats, HashMap<String, Database.Model.Player> playerCacheMap, MatchType reqMatchType) {
         String id = null, outcome = null, status = null, venue = null, format = null;
         MatchType matchType;
         MatchInfoExtractor matchInfoExtractor = new MatchInfoExtractor();
 
-        Element matchTitleElement = matchElement.selectFirst("a");
-        Elements matchOutcomeElement = matchElement.select("a.cb-text-complete");
-        Elements matchVenueElement = matchElement.select("div.text-gray");
+        Elements matchTitleElement;
+        switch (reqMatchType) {
+            case SCHEDULE:{
+                matchTitleElement = matchElement.select("a");
+                break;
+            }
+            case ARCHIVE:{
+                matchTitleElement = matchElement.select("a.text-hvr-underline");
+                break;
+            }
+            default:return null;
+        }
         // Match Title & Link & ID
         String title = matchTitleElement.text().toLowerCase();
         String url = matchTitleElement.attr("href");
+        if (!url.contains("cricket-scores")) {
+            return null;
+        }
         // Match Status and Outcome
+        Elements matchOutcomeElement = matchElement.select("a.cb-text-complete");
         if (matchOutcomeElement != null) {
             outcome = matchOutcomeElement.text().toLowerCase();
             status = matchInfoExtractor.extractStatus(matchOutcomeElement);
         }
         // Match Venue
+        Elements matchVenueElement = matchElement.select("div.text-gray");
         if (matchVenueElement != null) {
             venue = matchVenueElement.text().toLowerCase();
         }
@@ -49,6 +63,7 @@ class Match {
         format = matchInfoExtractor.extractFormat(title, seriesFormats);
 
         matchType = getMatchType(url, status, venue, format);
+        if (matchType != reqMatchType) return null;
 
         id = url.split(Pattern.quote("/"))[2];
         /* If matchID is already available in DB then do not scrape that match again */
