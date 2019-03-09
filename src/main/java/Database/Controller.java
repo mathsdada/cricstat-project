@@ -21,16 +21,16 @@ public class Controller {
                 Database.Tables.Series.insert(connection, series.getId(), series.getTitle(), StringUtils.getGender(series.getTitle()));
                 for (Match match : series.getMatches()) {
                     /* do not fill other tables if Match table insertion fails */
-                    if (!Database.Tables.Match.insert(connection, match.getId(), series.getId(), match.getTitle(),
+                    if (!Database.Tables.Match.insert(connection, match.getId(), match.getTitle(),
                             match.getFormat(), new String[]{match.getTeams().get(0).getName(), match.getTeams().get(1).getName()},
-                            match.getOutcome(), match.getWinningTeam(), match.getVenue(), match.getDate(), match.getStatus())) {
+                            match.getOutcome(), match.getWinningTeam(), match.getVenue(), match.getDate(), match.getStatus(), series.getId())) {
                         continue;
                     }
                     for (InningsScore inningsScore : match.getInningsScores()) {
                         Database.Tables.InningsScore.insert(connection, match.getId(), inningsScore.getInningsNum(),
                                 inningsScore.getBattingTeam().getName(), inningsScore.getBowlingTeam().getName(),
                                 inningsScore.getScoreHeader().getRuns(), inningsScore.getScoreHeader().getWickets(),
-                                inningsScore.getScoreHeader().getOvers());
+                                inningsScore.getScoreHeader().getBalls());
                         for (PlayerBattingScore playerBattingScore: inningsScore.getPlayerBattingScores()) {
                             Player batsman = playerBattingScore.getBatsman();
                             Player bowler = playerBattingScore.getBowler();
@@ -55,7 +55,7 @@ public class Controller {
                                     bowler.getBattingStyle(), bowler.getBowlingStyle());
                             Database.Tables.PlayerBowlingScore.insert(connection, bowler.getId(), match.getId(),
                                     inningsScore.getInningsNum(), inningsScore.getBowlingTeam().getName(), inningsScore.getBattingTeam().getName(),
-                                    playerBowlingScore.getOvers(), playerBowlingScore.getMaidens(),
+                                    playerBowlingScore.getBalls(), playerBowlingScore.getMaidens(),
                                     playerBowlingScore.getRuns(), playerBowlingScore.getWickets(),
                                     playerBowlingScore.getNoBalls(), playerBowlingScore.getWides(),
                                     playerBowlingScore.getEconomy());

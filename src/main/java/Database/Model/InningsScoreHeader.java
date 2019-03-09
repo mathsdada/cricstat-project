@@ -1,16 +1,16 @@
 package Database.Model;
 
-import java.math.BigDecimal;
+import Database.Common.StringUtils;
 
 public class InningsScoreHeader {
     private int mRuns;
     private int mWickets;
-    private BigDecimal mOvers;
+    private int mBalls;
 
     public InningsScoreHeader(String mRuns, String mWickets, String mOvers) {
         this.mRuns = Integer.parseInt(mRuns);
         this.mWickets = Integer.parseInt(mWickets);
-        this.mOvers = new BigDecimal(mOvers);
+        this.mBalls = StringUtils.getBallsFromOversStr(mOvers);
     }
 
     public int getRuns() {
@@ -21,7 +21,7 @@ public class InningsScoreHeader {
         return mWickets;
     }
 
-    public BigDecimal getOvers() {
-        return mOvers;
+    public int getBalls() {
+        return mBalls;
     }
 }

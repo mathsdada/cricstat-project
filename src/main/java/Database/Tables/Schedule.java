@@ -20,11 +20,17 @@ public class Schedule {
             format text NOT NULL,
             venue text NOT NULL,
             date bigint NOT NULL,
+            teams text NOT NULL,
             series text NOT NULL,
-            first_team json NOT NULL,
-            second_team json NOT NULL,
+            category text NOT NULL,
             PRIMARY KEY (id)
         )
+        WITH (
+            OIDS = FALSE
+        );
+
+        ALTER TABLE public.schedule
+            OWNER to vgangadhar11;
     */
     public static void insert(Connection connection, int id, String title, String format, String venue, Long date,
                               ArrayList<Team> teams, String series, String category) throws SQLException {

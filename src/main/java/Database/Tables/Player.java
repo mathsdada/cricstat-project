@@ -4,7 +4,7 @@ import java.sql.*;
 
 public class Player {
     /* Schema
-     * CREATE TABLE public.player
+        CREATE TABLE public.player
         (
             id integer NOT NULL,
             name text NOT NULL,
@@ -13,6 +13,12 @@ public class Player {
             bowling_style text,
             PRIMARY KEY (id)
         )
+        WITH (
+            OIDS = FALSE
+        );
+
+        ALTER TABLE public.player
+            OWNER to vgangadhar11;
       * */
     /* TODO provide update API so that if any of [role, batting_style, bowling_style] are '--' in the DB,
             then they can be updated */

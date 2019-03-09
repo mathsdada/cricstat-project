@@ -1,5 +1,7 @@
 package Database.Common;
 
+import java.util.regex.Pattern;
+
 public class StringUtils {
     static public int longestCommonSubstringSize(String string_1, String string_b){
         // https://github.com/mission-peace/interview/blob/master/src/com/interview/dynamic/LongestCommonSubstring.java
@@ -51,5 +53,13 @@ public class StringUtils {
             return "women";
         }
         return "men";
+    }
+
+    public static int getBallsFromOversStr(String overs) {
+        int balls = 0;
+        String[] overs_balls = overs.split(Pattern.quote("."));
+        balls += 6*(Integer.parseInt(overs_balls[0]));
+        if (overs_balls.length == 2) balls += Integer.parseInt(overs_balls[1]);
+        return balls;
     }
 }

@@ -1,32 +1,36 @@
 package Database.Tables;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.*;
 
 public class Match {
     /* Schema
-            CREATE TABLE public.match
-            (
-                id integer NOT NULL,
-                series_id integer NOT NULL,
-                title text NOT NULL,
-                format text NOT NULL,
-                teams text[] NOT NULL,
-                outcome text NOT NULL,
-                winning_team text,
-                venue text NOT NULL,
-                date bigint NOT NULL,
-                status text NOT NULL;
-                PRIMARY KEY (id),
-                FOREIGN KEY (series_id)
-                    REFERENCES public.series (id) MATCH SIMPLE
-                    ON UPDATE NO ACTION
-                    ON DELETE NO ACTION
-            )
+        CREATE TABLE public.match
+        (
+            id integer NOT NULL,
+            title text NOT NULL,
+            format text NOT NULL,
+            teams text[] NOT NULL,
+            outcome text NOT NULL,
+            winning_team text,
+            venue text NOT NULL,
+            date bigint NOT NULL,
+            status text NOT NULL,
+            series_id integer NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (series_id)
+                REFERENCES public.series (id) MATCH SIMPLE
+                ON UPDATE NO ACTION
+                ON DELETE NO ACTION
+        )
+        WITH (
+            OIDS = FALSE
+        );
+
+        ALTER TABLE public.match
+            OWNER to vgangadhar11;
      */
-    public static boolean insert(Connection connection, int id, int seriesId, String title, String format, String[] teams,
-                         String outcome, String winningTeam, String venue, Long date, String status) throws SQLException {
+    public static boolean insert(Connection connection, int id, String title, String format, String[] teams,
+                         String outcome, String winningTeam, String venue, Long date, String status, int seriesId) throws SQLException {
         if (isAvailable(connection, id)) {
             System.out.println("Match with id = " + id + " is already available in DB");
             return false;
@@ -34,16 +38,17 @@ public class Match {
         String SQL = "INSERT INTO match VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement preparedStatement = connection.prepareStatement(SQL);
 
-        preparedStatement.setInt(1, id);
-        preparedStatement.setInt(2, seriesId);
-        preparedStatement.setString(3, title);
-        preparedStatement.setString(4, format);
-        preparedStatement.setArray(5, connection.createArrayOf("TEXT", teams));
-        preparedStatement.setString(6, outcome);
-        preparedStatement.setString(7, winningTeam);
-        preparedStatement.setString(8, venue);
-        preparedStatement.setLong(9, date);
-        preparedStatement.setString(10, status);
+        int parameterIndex = 0;
+        preparedStatement.setInt(++parameterIndex, id);
+        preparedStatement.setString(++parameterIndex, title);
+        preparedStatement.setString(++parameterIndex, format);
+        preparedStatement.setArray(++parameterIndex, connection.createArrayOf("TEXT", teams));
+        preparedStatement.setString(++parameterIndex, outcome);
+        preparedStatement.setString(++parameterIndex, winningTeam);
+        preparedStatement.setString(++parameterIndex, venue);
+        preparedStatement.setLong(++parameterIndex, date);
+        preparedStatement.setString(++parameterIndex, status);
+        preparedStatement.setInt(++parameterIndex, seriesId);
 
         preparedStatement.executeUpdate();
         preparedStatement.close();

@@ -7,21 +7,21 @@ import java.sql.Statement;
 
 public class HeadToHead {
     /*
-        CREATE TABLE public.batsman_to_bowler
+        CREATE TABLE public.player_head_to_head
         (
             batsman_id integer NOT NULL,
-            batsman_team text NOT NULL,
             bowler_id integer NOT NULL,
-            bowler_team text NOT NULL,
+            batting_team text NOT NULL,
+            bowling_team text NOT NULL,
             match_id integer NOT NULL,
             innings_num integer NOT NULL,
-            num_balls integer NOT NULL,
-            num_runs integer NOT NULL,
-            num_wickets integer NOT NULL,
-            num_dot_balls integer NOT NULL,
-            num_fours integer NOT NULL,
-            num_sixes integer NOT NULL,
-            num_no_balls integer NOT NULL,
+            balls integer NOT NULL,
+            runs integer NOT NULL,
+            wicket boolean NOT NULL,
+            dot_balls integer NOT NULL,
+            fours integer NOT NULL,
+            sixes integer NOT NULL,
+            no_balls integer NOT NULL,
             FOREIGN KEY (batsman_id)
                 REFERENCES public.player (id) MATCH SIMPLE
                 ON UPDATE NO ACTION
@@ -35,6 +35,12 @@ public class HeadToHead {
                 ON UPDATE NO ACTION
                 ON DELETE NO ACTION
         )
+        WITH (
+            OIDS = FALSE
+        );
+
+        ALTER TABLE public.player_head_to_head
+            OWNER to vgangadhar11;
      */
     public static void insert(Connection connection, int batsmanId, String batsmanTeam, int bowlerId, String bowlerTeam,
                               int matchId, int inningsNum, int numBalls, int numRuns, int numWickets, int numDotBalls,
@@ -42,19 +48,20 @@ public class HeadToHead {
         String SQL = "INSERT INTO batsman_to_bowler VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement preparedStatement = connection.prepareStatement(SQL);
 
-        preparedStatement.setInt(   1,  batsmanId);
-        preparedStatement.setString(2,  batsmanTeam);
-        preparedStatement.setInt(   3,  bowlerId);
-        preparedStatement.setString(4,  bowlerTeam);
-        preparedStatement.setInt(   5,  matchId);
-        preparedStatement.setInt(   6,  inningsNum);
-        preparedStatement.setInt(   7,  numBalls);
-        preparedStatement.setInt(   8,  numRuns);
-        preparedStatement.setInt(   9,  numWickets);
-        preparedStatement.setInt(   10, numDotBalls);
-        preparedStatement.setInt(   11, numFours);
-        preparedStatement.setInt(   12, numSixes);
-        preparedStatement.setInt(   13, numNoBalls);
+        int parameterIndex = 0;
+        preparedStatement.setInt(   ++parameterIndex,  batsmanId);
+        preparedStatement.setInt(   ++parameterIndex,  bowlerId);
+        preparedStatement.setString(++parameterIndex,  batsmanTeam);
+        preparedStatement.setString(++parameterIndex,  bowlerTeam);
+        preparedStatement.setInt(   ++parameterIndex,  matchId);
+        preparedStatement.setInt(   ++parameterIndex,  inningsNum);
+        preparedStatement.setInt(   ++parameterIndex,  numBalls);
+        preparedStatement.setInt(   ++parameterIndex,  numRuns);
+        preparedStatement.setInt(   ++parameterIndex,  numWickets);
+        preparedStatement.setInt(   ++parameterIndex, numDotBalls);
+        preparedStatement.setInt(   ++parameterIndex, numFours);
+        preparedStatement.setInt(   ++parameterIndex, numSixes);
+        preparedStatement.setInt(   ++parameterIndex, numNoBalls);
 
         preparedStatement.executeUpdate();
         preparedStatement.close();

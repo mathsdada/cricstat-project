@@ -5,34 +5,40 @@ import java.sql.*;
 
 public class PlayerBattingScore {
     /*
-    *   CREATE TABLE public.player_batting_score
-        (
-            player_id integer NOT NULL,
-            match_id integer NOT NULL,
-            innings_num integer NOT NULL,
-            team_played_for text NOT NULL,
-            team_played_against text NOT NULL,
-            runs_scored integer NOT NULL,
-            balls_played integer NOT NULL,
-            num_fours integer NOT NULL,
-            num_sixes integer NOT NULL,
-            strike_rate numeric(10, 2) NOT NULL,
-            status text NOT NULL,
-            bowled_out_by integer,
-            FOREIGN KEY (player_id)
-                REFERENCES public.player (id) MATCH SIMPLE
-                ON UPDATE NO ACTION
-                ON DELETE NO ACTION,
-            FOREIGN KEY (match_id)
-                REFERENCES public.match (id) MATCH SIMPLE
-                ON UPDATE NO ACTION
-                ON DELETE NO ACTION,
-            FOREIGN KEY (bowled_out_by)
-                REFERENCES public.player (id) MATCH SIMPLE
-                ON UPDATE NO ACTION
-                ON DELETE NO ACTION
-        )
-    * */
+            CREATE TABLE public.player_batting_score
+            (
+                player_id integer NOT NULL,
+                match_id integer NOT NULL,
+                innings_num integer NOT NULL,
+                team_played_for text NOT NULL,
+                team_played_against text NOT NULL,
+                runs integer NOT NULL,
+                balls integer NOT NULL,
+                fours integer NOT NULL,
+                sixes integer NOT NULL,
+                strike_rate numeric(10, 2) NOT NULL,
+                status text NOT NULL,
+                bowler_id integer,
+                FOREIGN KEY (player_id)
+                    REFERENCES public.player (id) MATCH SIMPLE
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION,
+                FOREIGN KEY (match_id)
+                    REFERENCES public.match (id) MATCH SIMPLE
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION,
+                FOREIGN KEY (bowler_id)
+                    REFERENCES public.player (id) MATCH SIMPLE
+                    ON UPDATE NO ACTION
+                    ON DELETE NO ACTION
+            )
+            WITH (
+                OIDS = FALSE
+            );
+
+            ALTER TABLE public.player_batting_score
+                OWNER to vgangadhar11;
+    */
     public static void insert(Connection connection, int playerId, int matchId, int inningsNum,
                               String teamPlayedFor, String teamPlayedAgainst,
                               int runsScored, int ballsPlayed, int numFours, int numSixes, BigDecimal strikeRate,

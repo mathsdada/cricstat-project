@@ -8,7 +8,7 @@ import java.sql.Statement;
 
 public class InningsScore {
     /* Schema
-    *   CREATE TABLE public.innings_score
+        CREATE TABLE public.innings_score
         (
             match_id integer NOT NULL,
             innings_num integer NOT NULL,
@@ -16,13 +16,21 @@ public class InningsScore {
             bowling_team text NOT NULL,
             runs integer NOT NULL,
             wickets integer NOT NULL,
-            overs numeric(4, 1) NOT NULL,
+            balls integer NOT NULL,
             FOREIGN KEY (match_id)
                 REFERENCES public.match (id) MATCH SIMPLE
+                ON UPDATE NO ACTION
+                ON DELETE NO ACTION
         )
+        WITH (
+            OIDS = FALSE
+        );
+
+        ALTER TABLE public.innings_score
+            OWNER to vgangadhar11;
      */
     public static void insert(Connection connection, int matchId, int inningsNum, String battingTeam,
-                              String bowlingTeam, int runs, int wickets, BigDecimal overs) throws SQLException {
+                              String bowlingTeam, int runs, int wickets, int balls) throws SQLException {
         String SQL = "INSERT INTO innings_score VALUES(?, ?, ?, ?, ?, ?, ?)";
         PreparedStatement preparedStatement = connection.prepareStatement(SQL);
 
@@ -32,7 +40,7 @@ public class InningsScore {
         preparedStatement.setString(4, bowlingTeam);
         preparedStatement.setInt(5, runs);
         preparedStatement.setInt(6, wickets);
-        preparedStatement.setBigDecimal(7, overs);
+        preparedStatement.setInt(7, balls);
 
         preparedStatement.executeUpdate();
         preparedStatement.close();

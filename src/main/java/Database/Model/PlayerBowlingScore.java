@@ -1,10 +1,12 @@
 package Database.Model;
 
+import Database.Common.StringUtils;
+
 import java.math.BigDecimal;
 
 public class PlayerBowlingScore {
     private Player mPlayer;
-    private BigDecimal mOvers;
+    private int mBalls;
     private int mMaidens;
     private int mRuns;
     private int mWickets;
@@ -16,7 +18,7 @@ public class PlayerBowlingScore {
                               String overs, String maidens, String wickets, String noBalls, String wides,
                               String runs, String economy) {
         mPlayer = player;
-        mOvers = new BigDecimal(overs);
+        mBalls = StringUtils.getBallsFromOversStr(overs);
         mMaidens = Integer.parseInt(maidens);
         mRuns = Integer.parseInt(runs);
         mWickets = Integer.parseInt(wickets);
@@ -29,8 +31,8 @@ public class PlayerBowlingScore {
         return mPlayer;
     }
 
-    public BigDecimal getOvers() {
-        return mOvers;
+    public int getBalls() {
+        return mBalls;
     }
 
     public int getMaidens() {
@@ -57,10 +59,9 @@ public class PlayerBowlingScore {
         return mEconomy;
     }
 
-    @Override
     public String toString() {
         return "Bowling Score: \nName : " + mPlayer +
-               "\nO : " + mOvers +
+               "\nB : " + mBalls +
                "\nM : " + mMaidens +
                "\nR : " + mRuns +
                "\nW : " + mWickets +
